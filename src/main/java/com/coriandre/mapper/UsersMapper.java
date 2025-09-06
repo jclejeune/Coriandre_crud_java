@@ -9,26 +9,25 @@ public class UsersMapper {
         if (users == null) {
             return null;
         }
-        UsersDTO dto = new UsersDTO();
-        dto.setId(users.getId());
-        dto.setUsername(users.getUsername());
-        dto.setEmail(users.getEmail());
-
-        if (users.getOrganisation() != null) {
-            dto.setOrganisationId(users.getOrganisation().getId());
-        }
-
-        return dto;
+        
+        return new UsersDTO(
+            users.getId(),
+            users.getUsername(),
+            users.getEmail(),
+            users.getRole() != null ? users.getRole().toString() : null
+        );
     }
 
     public static Users toEntity(UsersDTO dto) {
         if (dto == null) {
             return null;
         }
+        
         Users users = new Users();
-        users.setId(dto.getId());
-        users.setUsername(dto.getUsername());
-        users.setEmail(dto.getEmail());
+        users.setId(dto.id());
+        users.setUsername(dto.username());
+        users.setEmail(dto.email());
+        // Le rôle et le mot de passe seront définis dans le service
         // ⚠️ password volontairement ignoré côté DTO pour la sécurité
         return users;
     }

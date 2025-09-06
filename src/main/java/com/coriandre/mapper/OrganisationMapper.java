@@ -9,19 +9,29 @@ public class OrganisationMapper {
         if (organisation == null) {
             return null;
         }
-        OrganisationDTO dto = new OrganisationDTO();
-        dto.setId(organisation.getId());
-        dto.setName(organisation.getName());
-        return dto;
+        
+        return new OrganisationDTO(
+            organisation.getId(),
+            organisation.getName(),
+            organisation.getDescription(),
+            organisation.getAddress(),
+            organisation.getLatitude(),
+            organisation.getLongitude()
+        );
     }
 
     public static Organisation toEntity(OrganisationDTO dto) {
         if (dto == null) {
             return null;
         }
+        
         Organisation organisation = new Organisation();
-        organisation.setId(dto.getId());
-        organisation.setName(dto.getName());
+        organisation.setId(dto.id());
+        organisation.setName(dto.name());
+        organisation.setDescription(dto.description());
+        organisation.setAddress(dto.address());
+        organisation.setLatitude(dto.latitude());
+        organisation.setLongitude(dto.longitude());
         return organisation;
     }
 }

@@ -1,48 +1,73 @@
 package com.coriandre.controller;
 
-import com.coriandre.model.Organisation;
-import com.coriandre.repository.OrganisationRepository;
+import com.coriandre.dto.OrganisationDTO;
+import com.coriandre.mapper.OrganisationMapper;
+import com.coriandre.service.OrganisationService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/organisations")
 public class OrganisationController {
 
-    private final OrganisationRepository organisationRepository;
+    private final OrganisationService organisationService;
 
-    public OrganisationController(OrganisationRepository organisationRepository) {
-        this.organisationRepository = organisationRepository;
+    public OrganisationController(OrganisationService organisationService) {
+        this.organisationService = organisationService;
     }
 
     @GetMapping
-    public List<Organisation> getAll() {
-        return organisationRepository.findAll();
+    public ResponseEntity<List<OrganisationDTO>> getAll() {
+        List<OrganisationDTO> organisations = organisationService.getAll()
+            .stream()
+            .map(OrganisationMapper::toDTO)
+            .toList();
+        return ResponseEntity.ok(organisations);
     }
 
     @GetMapping("/{id}")
-    public Organisation getById(@PathVariable Long id) {
-        return organisationRepository.findById(id).orElseThrow();
+    public ResponseEntity<OrganisationDTO> getById(@PathVariable Long id) {
+        try {
+            OrganisationDTO organisation = OrganisationMapper.toDTO(organisationService.getById(id));
+            return ResponseEntity.ok(organisation);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PostMapping
-    public Organisation create(@RequestBody Organisation organisation) {
-        return organisationRepository.save(organisation);
+    public ResponseEntity<OrganisationDTO> create(@RequestBody OrganisationDTO organisationDTO) {
+        var organisation = OrganisationMapper.toEntity(organisationDTO);
+        var savedOrganisation = organisationService.save(organisation);
+        return ResponseEntity.ok(OrganisationMapper.toDTO(savedOrganisation));
     }
 
     @PutMapping("/{id}")
-    public Organisation update(@PathVariable Long id, @RequestBody Organisation organisation) {
-        Organisation existing = organisationRepository.findById(id).orElseThrow();
-        existing.setName(organisation.getName());
-        existing.setDescription(organisation.getDescription());
-        existing.setAddress(organisation.getAddress());
-        existing.setLatitude(organisation.getLatitude());
-        existing.setLongitude(organisation.getLongitude());
-        return organisationRepository.save(existing);
+    public ResponseEntity<OrganisationDTO> update(@PathVariable Long id, @RequestBody OrganisationDTO organisationDTO) {
+        try {
+            var existingOrganisation = organisationService.getById(id);
+            existingOrganisation.setName(organisationDTO.name());
+            existingOrganisation.setDescription(organisationDTO.description());
+            existingOrganisation.setAddress(organisationDTO.address());
+            existingOrganisation.setLatitude(organisationDTO.latitude());
+            existingOrganisation.setLongitude(organisationDTO.longitude());
+            
+            var updatedOrganisation = organisationService.save(existingOrganisation);
+            return ResponseEntity.ok(OrganisationMapper.toDTO(updatedOrganisation));
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
-        organisationRepository.deleteById(id);
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        try {
+            organisationService.delete(id);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

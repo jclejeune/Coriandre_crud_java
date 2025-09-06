@@ -1,62 +1,69 @@
 package com.coriandre.controller;
 
-import com.coriandre.model.Event;
-import com.coriandre.model.Organisation;
-import com.coriandre.repository.EventRepository;
-import com.coriandre.repository.OrganisationRepository;
+import com.coriandre.dto.EventDTO;
+import com.coriandre.mapper.EventMapper;
+import com.coriandre.service.EventService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/events")
 public class EventController {
 
-    private final EventRepository eventRepository;
-    private final OrganisationRepository organisationRepository;
+    private final EventService eventService;
 
-    public EventController(EventRepository eventRepository, OrganisationRepository organisationRepository) {
-        this.eventRepository = eventRepository;
-        this.organisationRepository = organisationRepository;
+    public EventController(EventService eventService) {
+        this.eventService = eventService;
     }
 
     @GetMapping
-    public List<Event> getAll() {
-        return eventRepository.findAll();
+    public ResponseEntity<List<EventDTO>> getAll() {
+        List<EventDTO> events = eventService.getAll()
+            .stream()
+            .map(EventMapper::toDTO)
+            .toList();
+        return ResponseEntity.ok(events);
     }
 
     @GetMapping("/{id}")
-    public Event getById(@PathVariable Long id) {
-        return eventRepository.findById(id).orElseThrow();
+    public ResponseEntity<EventDTO> getById(@PathVariable Long id) {
+        try {
+            EventDTO event = EventMapper.toDTO(eventService.getById(id));
+            return ResponseEntity.ok(event);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PostMapping
-    public Event create(@RequestBody Event event) {
-        if (event.getOrganisation() != null) {
-            Long orgId = event.getOrganisation().getId();
-            Optional<Organisation> org = organisationRepository.findById(orgId);
-            org.ifPresent(event::setOrganisation);
+    public ResponseEntity<EventDTO> create(@RequestBody EventDTO eventDTO) {
+        try {
+            var savedEvent = eventService.createEvent(eventDTO);
+            return ResponseEntity.ok(EventMapper.toDTO(savedEvent));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
         }
-        return eventRepository.save(event);
     }
 
     @PutMapping("/{id}")
-    public Event update(@PathVariable Long id, @RequestBody Event event) {
-        Event existing = eventRepository.findById(id).orElseThrow();
-        existing.setName(event.getName());
-        existing.setDescription(event.getDescription());
-        existing.setStartDate(event.getStartDate());
-        existing.setEndDate(event.getEndDate());
-
-        if (event.getOrganisation() != null) {
-            Long orgId = event.getOrganisation().getId();
-            organisationRepository.findById(orgId).ifPresent(existing::setOrganisation);
+    public ResponseEntity<EventDTO> update(@PathVariable Long id, @RequestBody EventDTO eventDTO) {
+        try {
+            var updatedEvent = eventService.updateEvent(id, eventDTO);
+            return ResponseEntity.ok(EventMapper.toDTO(updatedEvent));
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
         }
-        return eventRepository.save(existing);
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
-        eventRepository.deleteById(id);
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        try {
+            eventService.delete(id);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

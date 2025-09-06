@@ -9,34 +9,33 @@ public class EventMapper {
         if (event == null) {
             return null;
         }
-        EventDTO dto = new EventDTO();
-        dto.setId(event.getId());
-        dto.setName(event.getName());
-        dto.setDescription(event.getDescription());
-        dto.setStartDate(event.getStartDate());
-        dto.setEndDate(event.getEndDate());
-        dto.setLatitude(event.getLatitude());
-        dto.setLongitude(event.getLongitude());
-
-        if (event.getOrganisation() != null) {
-            dto.setOrganisationId(event.getOrganisation().getId());
-        }
-
-        return dto;
+        
+        return new EventDTO(
+            event.getId(),
+            event.getName(),
+            event.getDescription(),
+            event.getStartDate(),
+            event.getEndDate(),
+            event.getLatitude(),
+            event.getLongitude(),
+            event.getOrganisation() != null ? event.getOrganisation().getId() : null
+        );
     }
 
     public static Event toEntity(EventDTO dto) {
         if (dto == null) {
             return null;
         }
+        
         Event event = new Event();
-        event.setId(dto.getId());
-        event.setName(dto.getName());
-        event.setDescription(dto.getDescription());
-        event.setStartDate(dto.getStartDate());
-        event.setEndDate(dto.getEndDate());
-        event.setLatitude(dto.getLatitude());
-        event.setLongitude(dto.getLongitude());
+        event.setId(dto.id());
+        event.setName(dto.name());
+        event.setDescription(dto.description());
+        event.setStartDate(dto.startDate());
+        event.setEndDate(dto.endDate());
+        event.setLatitude(dto.latitude());
+        event.setLongitude(dto.longitude());
+        // Note: L'organisation sera définie dans le service
         return event;
     }
 }
